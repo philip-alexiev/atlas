@@ -186,8 +186,7 @@ public class HiveHook extends AtlasHook implements ExecuteWithHookContext {
 
                 case ALTERDATABASE:
                 case ALTERDATABASE_OWNER:
-                case ALTERDATABASE_LOCATION:
-                    event = new AlterDatabase(context);
+                    LOG.info("ALTERDATABASE case");
                 break;
 
                 case CREATETABLE:
@@ -233,9 +232,7 @@ public class HiveHook extends AtlasHook implements ExecuteWithHookContext {
                 break;
 
                 default:
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("HiveHook.run({}): operation ignored", hookContext.getOperationName());
-                    }
+                    LOG.info("HiveHook.run({}): operation ignored", hookContext.getOperationName());
                 break;
             }
 
