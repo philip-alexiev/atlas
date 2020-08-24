@@ -31,6 +31,8 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.plan.HiveOperation;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -39,6 +41,8 @@ import static org.apache.atlas.hive.hook.events.BaseHiveEvent.toTable;
 
 
 public class AtlasHiveHookContext {
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasHiveHookContext.class);
+
     public static final char   QNAME_SEP_METADATA_NAMESPACE = '@';
     public static final char   QNAME_SEP_ENTITY_NAME        = '.';
     public static final char   QNAME_SEP_PROCESS            = ':';
@@ -78,8 +82,9 @@ public class AtlasHiveHookContext {
         this.knownObjects     = knownObjects;
         this.metastoreHook    = metastoreHook;
         this.metastoreEvent   = listenerEvent;
-        this.metastoreHandler = (listenerEvent != null) ? metastoreEvent.getIHMSHandler() : null;
-
+        LOG.info("MH: Getting metastore handler via deprecated .getHandler()");
+        this.metastoreHandler = (listenerEvent != null) ? metastoreEvent.getHandler() : null;
+        LOG.info("MH: Got metastore handler {}", this.metastoreHandler);
         init();
     }
 
@@ -261,8 +266,7 @@ public class AtlasHiveHookContext {
                     databases.add(((CreateDatabaseEvent) metastoreEvent).getDatabase());
                     break;
                 case ALTERDATABASE:
-                    databases.add(((AlterDatabaseEvent) metastoreEvent).getOldDatabase());
-                    databases.add(((AlterDatabaseEvent) metastoreEvent).getNewDatabase());
+                    LOG.info("MH: Alter database event is cut due downgrade to hive 2");
                     break;
                 case CREATETABLE:
                     tables.add(toTable(((CreateTableEvent) metastoreEvent).getTable()));
