@@ -52,7 +52,7 @@ public class AlterDatabase extends CreateDatabase {
 
     public AtlasEntitiesWithExtInfo getHiveMetastoreEntities() throws Exception {
         AtlasEntitiesWithExtInfo ret     = new AtlasEntitiesWithExtInfo();
-        LOG.info("MH: Alter getHiveMetastoreEntities is cut due downgrade to hive 2");
+        LOG.info("MH Alter getHiveMetastoreEntities is cut due downgrade to hive 2");
         addProcessedEntities(ret);
         return ret;
     }

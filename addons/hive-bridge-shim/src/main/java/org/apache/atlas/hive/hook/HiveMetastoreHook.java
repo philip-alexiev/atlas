@@ -46,29 +46,33 @@ public class HiveMetastoreHook extends MetaStoreEventListener {
     }
 
     private void initialize() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> HiveMetastoreHook.initialize()");
-        }
+        LOG.info("==> HiveMetastoreHook.initialize()");
 
         try {
+            LOG.info("MH Getting atlasPluginClassLoader");
+
             atlasPluginClassLoader = AtlasPluginClassLoader.getInstance(ATLAS_PLUGIN_TYPE, this.getClass());
+
+            LOG.info("MH Got atlasPluginClassLoader: {}", atlasPluginClassLoader);
+            LOG.info("MH Initializing atlasPluginClassloader");
 
             @SuppressWarnings("unchecked")
             Class<MetaStoreEventListener> cls = (Class<MetaStoreEventListener>)
                     Class.forName(ATLAS_HIVE_METASTORE_HOOK_IMPL_CLASSNAME, true, atlasPluginClassLoader);
+            LOG.info("MH Activating atlasPluginClassloader");
 
             activatePluginClassLoader();
-
+            LOG.info("MH Getting new instance of declared constructor");
             atlasMetastoreHookImpl = cls.getDeclaredConstructor(Configuration.class).newInstance(config);
+            LOG.info("MH Got atlasMetastoreHookImpl instance: {}", atlasMetastoreHookImpl);
         } catch (Exception ex) {
             LOG.error("Error instantiating Atlas hook implementation", ex);
         } finally {
             deactivatePluginClassLoader();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HiveMetastoreHook.initialize()");
-        }
+        LOG.info("<== HiveMetastoreHook.initialize()");
+
     }
 
     @Override
@@ -163,25 +167,6 @@ public class HiveMetastoreHook extends MetaStoreEventListener {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== HiveMetastoreHook.onDropDatabase()");
-        }
-    }
-
-    @Override
-    public void onAlterDatabase(AlterDatabaseEvent dbEvent) throws MetaException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> HiveMetastoreHook.onAlterDatabase()");
-        }
-
-        try {
-            activatePluginClassLoader();
-
-            atlasMetastoreHookImpl.onAlterDatabase(dbEvent);
-        } finally {
-            deactivatePluginClassLoader();
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== HiveMetastoreHook.onAlterDatabase()");
         }
     }
 
