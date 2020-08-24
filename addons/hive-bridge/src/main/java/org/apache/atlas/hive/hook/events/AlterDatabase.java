@@ -25,7 +25,6 @@ import org.apache.atlas.model.notification.HookNotification;
 import org.apache.atlas.model.notification.HookNotification.EntityUpdateRequestV2;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.events.AlterDatabaseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,20 +52,8 @@ public class AlterDatabase extends CreateDatabase {
 
     public AtlasEntitiesWithExtInfo getHiveMetastoreEntities() throws Exception {
         AtlasEntitiesWithExtInfo ret     = new AtlasEntitiesWithExtInfo();
-        AlterDatabaseEvent       dbEvent = (AlterDatabaseEvent) context.getMetastoreEvent();
-        Database                 oldDb   = dbEvent.getOldDatabase();
-        Database                 newDb   = dbEvent.getNewDatabase();
-
-        if (newDb != null) {
-            AtlasEntity dbEntity = toDbEntity(newDb);
-
-            ret.addEntity(dbEntity);
-        } else {
-            LOG.error("AlterDatabase.getEntities(): failed to retrieve db");
-        }
-
+        LOG.info("MH: Alter getHiveMetastoreEntities is cut due downgrade to hive 2");
         addProcessedEntities(ret);
-
         return ret;
     }
 
