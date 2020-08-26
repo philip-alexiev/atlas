@@ -39,7 +39,7 @@ import java.util.Properties;
  * Application properties used by Atlas.
  */
 public final class ApplicationProperties extends PropertiesConfiguration {
-    public static final String ATLAS_CONFIGURATION_DIRECTORY_PROPERTY = "atlas.conf";
+    public static final String ATLAS_CONFIGURATION_DIRECTORY_PROPERTY = "ATLAS_CONF";
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationProperties.class);
 
     public static final String  APPLICATION_PROPERTIES          = "atlas-application.properties";
@@ -113,7 +113,13 @@ public final class ApplicationProperties extends PropertiesConfiguration {
     }
 
     public static Configuration get(String fileName) throws AtlasException {
+        
         String confLocation = System.getProperty(ATLAS_CONFIGURATION_DIRECTORY_PROPERTY);
+
+        if(confLocation == null) {
+            confLocation = System.getenv(ATLAS_CONFIGURATION_DIRECTORY_PROPERTY);
+        }
+        
         try {
             URL url = null;
 
