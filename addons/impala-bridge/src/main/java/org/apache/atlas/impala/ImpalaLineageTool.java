@@ -69,15 +69,15 @@ public class ImpalaLineageTool {
 
     File[] currentFiles = getCurrentFiles();
     int fileNum = currentFiles.length;
-
     for(int i = 0; i < fileNum; i++) {
+      boolean currFileImported;
       String filename = currentFiles[i].getAbsolutePath();
       String walFilename = directoryName + WAL_FILE_PREFIX + currentFiles[i].getName() + WAL_FILE_EXTENSION;
 
       LOG.info("Importing: {}", filename);
-      importHImpalaEntities(impalaLineageHook, filename, walFilename);
+      currFileImported = importHImpalaEntities(impalaLineageHook, filename, walFilename))
 
-      if(i != fileNum - 1) {
+      if(currFileImported && i != fileNum - 1) {
         deleteLineageAndWal(currentFiles[i], walFilename);
       }
     }
@@ -175,9 +175,9 @@ public class ImpalaLineageTool {
    * Create a list of lineage queries based on the lineage file and the wal file
    * @param name
    * @param walfile
-   * @return
+   * @return true or false
    */
-  public void importHImpalaEntities(ImpalaLineageHook impalaLineageHook, String name, String walfile) {
+  public boolean importHImpalaEntities(ImpalaLineageHook impalaLineageHook, String name, String walfile) {
     List<String> lineageList = new ArrayList<>();
 
     try {
@@ -202,11 +202,12 @@ public class ImpalaLineageTool {
         BufferedWriter newWalFileBuf = new BufferedWriter(newWalFile);
         newWalFileBuf.newLine();
         newWalFileBuf.write(String.valueOf(lineageFile.length()) + "," + name);
-
         newWalFileBuf.close();
         newWalFile.close();
+        return true;
       } else {
         LOG.error("Error sending some of impala lineage records to ImpalaHook");
+        return false;
       }
     } catch (Exception e) {
       LOG.error("Error in processing lineage records. Exception: " + e.getMessage());
