@@ -211,6 +211,7 @@ public class ImpalaLineageTool {
       }
     } catch (Exception e) {
       LOG.error("Error in processing lineage records. Exception: " + e.getMessage());
+      return false;
     }
   }
 
