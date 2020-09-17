@@ -78,7 +78,8 @@ public class ImpalaLineageTool {
       currFileImported = importHImpalaEntities(impalaLineageHook, filename, walFilename))
 
       if(currFileImported && i != fileNum - 1) {
-        deleteLineageAndWal(currentFiles[i], walFilename);
+        LOG.info("MH deleteLineageAndWal Disabled");
+        //deleteLineageAndWal(currentFiles[i], walFilename);
       }
     }
     LOG.info("Impala bridge processing: Done! ");
@@ -182,6 +183,8 @@ public class ImpalaLineageTool {
 
     try {
       File lineageFile = new File(name); //use current file length to minus the offset
+      LOG.info("MH walfile creating disabled");
+      /*
       File walFile = new File(walfile);
       // if the wal file does not exist, create one with 0 byte read, else, read the number
       if(!walFile.exists()) {
@@ -189,7 +192,7 @@ public class ImpalaLineageTool {
         writer.write("0, " + name);
         writer.close();
       }
-
+      */
       LOG.debug("Reading: " + name);
       String lineageRecord = FileUtils.readFileToString(lineageFile, "UTF-8");
 
@@ -197,6 +200,8 @@ public class ImpalaLineageTool {
 
       // call instance of ImpalaLineageHook to process the list of Impala lineage record
       if(processImpalaLineageHook(impalaLineageHook, lineageList)) {
+        LOG.info("MH walfile writing disabled");
+        /*
         // write how many bytes the current file is to the wal file
         FileWriter newWalFile = new FileWriter(walfile, true);
         BufferedWriter newWalFileBuf = new BufferedWriter(newWalFile);
@@ -204,6 +209,7 @@ public class ImpalaLineageTool {
         newWalFileBuf.write(String.valueOf(lineageFile.length()) + "," + name);
         newWalFileBuf.close();
         newWalFile.close();
+        */
         return true;
       } else {
         LOG.error("Error sending some of impala lineage records to ImpalaHook");
