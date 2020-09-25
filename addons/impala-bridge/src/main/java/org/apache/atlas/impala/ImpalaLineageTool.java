@@ -34,6 +34,7 @@ import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static java.lang.Integer.parseInt;
 
 /**
  * Entry point of actual implementation of Impala lineage tool. It reads the lineage records in
@@ -75,11 +76,11 @@ public class ImpalaLineageTool {
       String walFilename = directoryName + WAL_FILE_PREFIX + currentFiles[i].getName() + WAL_FILE_EXTENSION;
 
       LOG.info("Importing: {}", filename);
-      currFileImported = importHImpalaEntities(impalaLineageHook, filename, walFilename))
+      currFileImported = importHImpalaEntities(impalaLineageHook, filename, walFilename);
 
       if(currFileImported && i != fileNum - 1) {
-        LOG.info("MH deleteLineageAndWal Disabled");
-        //deleteLineageAndWal(currentFiles[i], walFilename);
+        LOG.info("MH: Deleting lineage and wal for file:" + filename);
+        deleteLineageAndWal(currentFiles[i], walFilename);
       }
     }
     LOG.info("Impala bridge processing: Done! ");
@@ -171,7 +172,39 @@ public class ImpalaLineageTool {
 
     return allSucceed;
   }
+  private String getLastLineFromFile(File file){
+    try{
+      LOG.debug("MH: Getting last line from file:" + file.getName());
+      BufferedReader input = new BufferedReader(new FileReader(file));
+      String last = null, line;
 
+      while ((line = input.readLine()) != null) {
+        last = line;
+      }
+      LOG.debug("MH: Last line from file:" + file.getName() + ": " + last);
+      return last;
+    } catch (Exception e){
+      return null;
+    }
+  }
+  private int getLastFileLenFromWal(File walFile){
+    try{
+      String lastLine = getLastLineFromFile(walFile);
+
+      // Walfile is empty
+      if(lastLine == null){
+        LOG.debug("MH Last line from walfile:" + walFile + " is empty");
+        return 0;
+      }
+
+      int lastFileLen = parseInt(lastLine.split(",")[0]);
+      LOG.debug("MH File:" + walFile + " last read length is: " + lastFileLen);
+      return lastFileLen;
+    } catch (Exception e) {
+      LOG.error("Error in getting last file size from wal. Exception: " + e.getMessage());
+      return -1;
+    }
+  }
   /**
    * Create a list of lineage queries based on the lineage file and the wal file
    * @param name
@@ -183,8 +216,6 @@ public class ImpalaLineageTool {
 
     try {
       File lineageFile = new File(name); //use current file length to minus the offset
-      LOG.info("MH walfile creating disabled");
-      /*
       File walFile = new File(walfile);
       // if the wal file does not exist, create one with 0 byte read, else, read the number
       if(!walFile.exists()) {
@@ -192,16 +223,29 @@ public class ImpalaLineageTool {
         writer.write("0, " + name);
         writer.close();
       }
-      */
+
       LOG.debug("Reading: " + name);
+
       String lineageRecord = FileUtils.readFileToString(lineageFile, "UTF-8");
+      LOG.info("MH Lineage Record:" + lineageRecord);
+      int lastLineageRecordIndex = getLastFileLenFromWal(walFile);
+
+      // When deleting of wall files is disabled. Otherwise it should never enter this statement.
+      if(lastLineageRecordIndex >= lineageRecord.length()){
+        LOG.info("MH file:" + lineageFile.getName() + " already imported");
+        return true;
+      }
+
+      if(lastLineageRecordIndex > 0){
+        // MH: Manipulate string from where last read to resume reading
+        lineageRecord = lineageRecord.substring(lastLineageRecordIndex + 1);
+        LOG.info("MH Resuming reading record from: " + lineageRecord);
+      }
+      LOG.info("MH lineageRecordAfterResumeManipulation:", lineageRecord);
 
       lineageList.add(lineageRecord);
-
       // call instance of ImpalaLineageHook to process the list of Impala lineage record
       if(processImpalaLineageHook(impalaLineageHook, lineageList)) {
-        LOG.info("MH walfile writing disabled");
-        /*
         // write how many bytes the current file is to the wal file
         FileWriter newWalFile = new FileWriter(walfile, true);
         BufferedWriter newWalFileBuf = new BufferedWriter(newWalFile);
@@ -209,7 +253,6 @@ public class ImpalaLineageTool {
         newWalFileBuf.write(String.valueOf(lineageFile.length()) + "," + name);
         newWalFileBuf.close();
         newWalFile.close();
-        */
         return true;
       } else {
         LOG.error("Error sending some of impala lineage records to ImpalaHook");
